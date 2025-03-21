@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>peano curves</title>
+  <style>
+    :root {
+      font-family: monospace;
+    }
+    form { display: table; }
+    .row {
+      display: table-row;
+      margin-bottom: 10px;
+    }
+    .row > * {
+      display: table-cell;
+      vertical-align: middle;
+    }
+    .row label {
+      text-align: right;
+      padding-block: 10px;
+    }
+    label { padding-right: 10px; }
+    #container {
+      display: inline-block;
+      padding: 10px;
+    }
+    #render-test {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #render-test > * {
+      width: 600px;
+      height: 600px;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <canvas id="canvas" width="600" height="600"></canvas>
+  </div>
+  <form action="" id="controls">
+    <div class="row">
+      <label for="ruleset">Ruleset</label>
+      <select id="ruleset"></select>
+    </div>
+    <div class="row">
+      <label for="iterations">Iterations</label>
+      <input type="range" min="1" max="40" id="iterations">
+    </div>
+    <div class="row">
+      <label for="linewidth">Stroke Width</label>
+      <input type="range" min="1" max="20" id="linewidth">
+    </div>
+    <div class="row">
+      <label for="strokestyle">Stroke Color</label>
+      <input type="color" id="strokestyle">
+    </div>
+    <div class="row">
+      <label for="fillstyle">Fill Color</label>
+      <input type="color" id="fillstyle">
+    </div>
+  </form>
+  <div id="render-test">
+    <div id="s"></div>
+    <div id="c"></div>
+  </div>
+  <script type="module">
+    import { SVGRenderer, CanvasRenderer } from "./gfx.js";
+
+    for (const id of ["s", "c"]) {
+      const target = document.getElementById(id);
+      if (target) {
+        const renderer = id === "s" ? new SVGRenderer(target) : new CanvasRenderer(target);
+        renderer.setLineWidth(4);
+        renderer.setStrokeStyle("#000000");
+        renderer.moveTo(30, 30);
+        renderer.lineTo(100, 100);
+        renderer.lineTo(100, 30);
+        renderer.lineTo(30, 100);
+        renderer.setStrokeStyle("#ff0000");
+        renderer.moveTo(50, 50);
+        renderer.lineTo(120, 120);
+        renderer.lineTo(120, 50);
+        renderer.lineTo(50, 120);
+        renderer.render();
+      }
+    }
+
+
+    const SCALE = 1;
+    const ITER_MAX = 6;
+    const START_RULESET = "Hilbert";
+    const RULESETS = {
+      Dragon: {
+        F: "F+G",
+        G: "F-G",
+        go: ["F", "G"],
+        start: "FX",
+        angle: 90,
+        scaleFactor: (i) => 60,
+        iterMax: 13,
+        x: 1 / 2,
+        y: 1 / 3,
+      },
+      Gosper: {
+        A: "A-B--B+A++AA+B-",
+        B: "+A-BB--B-A++A+B",
+        start: "A",
+        go: ["A", "B"],
+        angle: 60,
+        scaleFactor: (i) => 2 * (3 ** i),
+        iterMax: 6,
+        x: 1 / 2,
+        y: 2 / 3,
+      },
+      Hilbert: {
+        X: "+YF-XFX-FY+",
+        Y: "-XF+YFY+FX-",
+        start: "X",
+        angle: 90,
+        scaleFactor: (i) => 2 ** i - 1,
+        iterMax: 8,
+      },
+      "Kit Wallace": {
+        // https://x.com/kitwallace/status/1190917301010391045
+        X: "XF+F+XF--F--XF+F+X",
+        start: "F--XF--F--XF",
+        angle: 45,
+        scaleFactor: (i) => 4 * 2 ** i - 1,
+        iterMax: 8,
+        x: 0.49,
+        y: 0.99,
+      },
+      "Koch Snowflake": {
+        F: "F-F++F-F",
+        start: "F",
+        angle: 60,
+        iterMax: 8,
+        scaleFactor: (i) => 3 * (3 ** (i - 1)),
+        y: 2 / 3,
+      },
+      "Koch Island": {
+        F: "F+F-F-FF+F+F-F",
+        start: "F-F-F-F",
+        angle: 90,
+        scaleFactor: (i) => 3 ** i,
+        iterMax: 6,
+        y: 1 / 2,
+      },
+      "Koch Quadratic": {
+        F: "F-F+F+F-F",
+        start: "F",
+        angle: 90,
+        iterMax: 8,
+        scaleFactor: (i) => 3 * (3 ** (i - 1)),
+        y: 2 / 3,
+      },
+      Levy: {
+        F: "+F--F+",
+        start: "F",
+        angle: 45,
+        // scaleFactor: (i) => (Math.pow(2, Math.floor((i + 1) / 2) + 1) - 2) * Math.pow(Math.SQRT2, i % 2),
+        scaleFactor: (i) => i ** 2,
+        iterMax: 10,
+        x: 1 / 3,
+        y: 1 / 2,
+      },
+      "Peano Basic": {
+        F: "F+F-F-F-F+F+F+F-F",
+        start: "F",
+        angle: 90,
+        scaleFactor: (i) => 3 ** i,
+        iterMax: 6,
+        y: 1 / 2,
+      },
+      Peano: {
+        X: "XFYFX+F+YFXFY-F-XFYFX",
+        Y: "YFXFY-F-XFYFX+F+YFXFY",
+        start: "X",
+        angle: 90,
+        heading: 0,
+        scaleFactor: (i) => 3 ** i - 1,
+        iterMax: 6,
+      },
+      "Sierpinski Triangle": {
+        F: "F-G+F+G-F",
+        G: "GG",
+        start: "F-G-G",
+        go: ["F", "G"],
+        angle: 120,
+        heading: 0,
+        scaleFactor: (i) => 2 ** i,
+        iterMax: 8,
+        y: 0.9,
+      },
+      "Sierpinski Arrowhead": {
+        A: "B-A-B",
+        B: "A+B+A",
+        start: "A",
+        go: ["A", "B"],
+        angle: 60,
+        heading: 0,
+        scaleFactor: (i) => 2 * (2 ** i),
+        iterMax: 10,
+        x: 1 / 4,
+        y: 1 / 2,
+      },
+    }
+
+    let iterations = 3;
+    let lineWidth = 4;
+    let angle = 0;
+    let strokeStyle = "#DF80FF";
+    let fillStyle = "#161621";
+    let curve = RULESETS[START_RULESET];
+
+    class LSystem {
+      constructor({
+        ctx,
+        rules = RULESETS[START_RULESET],
+      } = {}) {
+        this.ctx = ctx;
+        this.rules = rules;
+        this.angle = (this.rules.heading || 0) * (Math.PI / 180);
+        this.x = (this.rules.x || 0) * canvas.width + lineWidth / 2;
+        this.y = (this.rules.y || 0) * canvas.height + lineWidth / 2;
+      }
+
+      reset() {
+        this.x = (this.rules.x || 0) * canvas.width + lineWidth / 2;
+        this.y = (this.rules.y || 0) * canvas.height + lineWidth / 2;
+        this.angle = (this.rules.heading || 0) * (Math.PI / 180);
+        this.ctx.moveTo(this.x, this.y);
+      }
+
+      rewrite(iter) {
+        let str = this.rules.start;
+        for (let i = 0; i < Math.min(this.rules.iterMax, iter); i++) {
+          let tmp = "";
+          for (const ch of [...str]) {
+            const rule = this.rules[ch];
+            if (rule) {
+              tmp += rule;
+            } else {
+              tmp += ch;
+            }
+          }
+          str = tmp;
+        }
+        return str;
+      }
+
+
+
+      execute(iterations) {
+        this.ctx.strokeStyle = strokeStyle;
+        this.ctx.lineWidth = lineWidth;
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.x, this.y);
+
+        for (const c of this.rewrite(iterations)) {
+          const go = this.rules.go || ["F"];
+          const move = this.rules.move || ["M"];
+
+          if (go.includes(c)) {
+            this.drawLine(iterations);
+          } else if (move.includes(c)) {
+            this.move(iterations);
+          } else if (c === "+") {
+            this.turn(this.rules.angle * (Math.PI / 180));
+          } else if (c === "-") {
+            this.turn(-this.rules.angle * (Math.PI / 180));
+          }
+        }
+        this.ctx.stroke();
+      }
+
+      drawLine(iterations) {
+        const factor = this.rules.scaleFactor?.(iterations) || iterations;
+        const domain = Math.min(canvas.width, canvas.height) - lineWidth - 2;
+        this.x += Math.cos(this.angle) * domain  / factor;
+        this.y += Math.sin(this.angle) * domain / factor;
+        this.ctx.lineTo(this.x, this.y);
+      }
+
+      move(iterations) {
+        const factor = this.rules.scaleFactor?.(iterations) || iterations;
+        const domain = Math.min(canvas.width, canvas.height) - lineWidth - 2;
+        this.x += Math.cos(this.angle) * domain / factor;
+        this.y += Math.sin(this.angle) * domain / factor;
+        this.ctx.moveTo(this.x, this.y);
+      }
+
+      turn(angle) {
+        this.angle = this.angle + angle % (2 * Math.PI);
+      }
+    }
+
+    let canvas = document.getElementById("canvas");
+    let ctx = canvas.getContext("2d");
+
+    const peano = new LSystem({
+      ctx,
+      rules: curve,
+    });
+
+    let rulesetSelect = document.getElementById("ruleset");
+    for (const [name, rules] of Object.entries(RULESETS)) {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      rulesetSelect.appendChild(option);
+    }
+    rulesetSelect.value = START_RULESET;
+    rulesetSelect.addEventListener("input", () => {
+      curve = RULESETS[rulesetSelect.value];
+      iterationsInput.max = curve.iterMax || ITER_MAX;
+
+      if (curve.iterMax && curve.iterMax !== iterationsInput.max) {
+        iterationsInput.max = curve.iterMax;
+        iterationsInput.value = Math.min(iterations, curve.iterMax);
+        iterations = parseInt(iterationsInput.value);
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      peano.rules = curve;
+      peano.reset();
+      peano.execute(iterations);
+    });
+
+    let iterationsInput = document.getElementById("iterations");
+    iterationsInput.value = iterations;
+    iterationsInput.max = curve.iterMax || ITER_MAX;
+    iterationsInput.addEventListener("input", () => {
+      iterations = parseInt(iterationsInput.value);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      peano.reset();
+      peano.execute(iterations);
+    });
+
+    let lineWidthInput = document.getElementById("linewidth");
+    lineWidthInput.value = lineWidth;
+    lineWidthInput.addEventListener("input", () => {
+      lineWidth = parseInt(lineWidthInput.value);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      peano.reset();
+      peano.execute(iterations);
+    });
+
+    let strokeStyleInput = document.getElementById("strokestyle");
+    strokeStyleInput.value = strokeStyle;
+    strokeStyleInput.addEventListener("input", () => {
+      strokeStyle = strokeStyleInput.value;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      peano.reset();
+      peano.execute(iterations);
+    });
+
+    let fillStyleInput = document.getElementById("fillstyle");
+    let container = document.getElementById("container");
+    container.style.backgroundColor = fillStyle;
+    fillStyleInput.value = fillStyle;
+    fillStyleInput.addEventListener("input", () => {
+      fillStyle = fillStyleInput.value;
+      container.style.backgroundColor = fillStyle;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      peano.reset();
+      peano.execute(iterations);
+    });
+
+    peano.execute(iterations);
+  </script>
+</body>
+</html>

@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>loooooops</title>
   <style>
+    :root {
+      --gradr: 0deg;
+      --grad1: #ff7e5f;
+      --grad2: #feb47b;
+    }
     .full {
       position: absolute;
       inset: 0;
@@ -13,7 +18,7 @@
     #container {
       position: relative;
       display: inline-grid;
-      background: linear-gradient(to right, #ff7e5f, #feb47b);
+      background: linear-gradient(var(--gradr), var(--grad1), var(--grad2));
     }
     #layer {
       position: absolute;
@@ -29,145 +34,7 @@
       opacity: 0.6;
     }
   </style>
-  <script src=" https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.15/dist/umd/ffmpeg.min.js "></script>
-  <script src=" https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.2/dist/umd/index.min.js "></script>
-  <script type="module">
-    console.log(FFmpeg)
-    export function saveAs(data, filename) {
-      const url = typeof data === "string" ? data : URL.createObjectURL(data);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      link.click();
-    }
-
-    export function saveFrame(canvas, filename, options) {
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            throw new Error("Unable to create Blob from canvas");
-          }
-          saveAs(blob, filename);
-        },
-        options?.type,
-        options?.quality,
-      );
-    }
-
-    export function saveFrames(canvas, tick, filename, options) {
-      const { count = 100, blocking = false, ...frameOptions } = options;
-
-      let t = performance.now();
-      let f = 1;
-      const fileType = frameOptions?.type?.split("/")[1] ?? "png";
-      const currentFilename = filename ?? (() => `${f}.${fileType}`);
-
-      if (blocking) {
-        for (; f <= count; f++) {
-          const dt = performance.now() - t;
-          t += dt;
-
-          tick(canvas, f, dt);
-          saveFrame(canvas, currentFilename(f, dt), frameOptions);
-        }
-      } else {
-        (function loop() {
-          const dt = performance.now() - t;
-          t += dt;
-
-          tick(canvas, f, dt);
-          saveFrame(canvas, currentFilename(f, dt), frameOptions);
-
-          if (f >= count) return;
-          f++;
-
-          requestAnimationFrame(loop);
-        })();
-      }
-    }
-
-    window.saveVideo = async function saveVideo(canvas, tick, filename, options = {}) {
-      const { count = 100, fps = 30, blocking = false, type = "mp4", ...frameOptions } = options;
-
-      let t = performance.now();
-      let f = 1;
-      const fileType = type ?? "mp4";
-      const fileName = filename ?? `output.${fileType}`;
-
-      const ffmpeg = await (async () => {
-        // const BASE_URL = "/kdim";
-        const BASE_URL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
-        const ffmpeg = new FFmpeg.FFmpeg();
-        await ffmpeg.load({
-          coreURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
-          wasmURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.wasm`, 'application/wasm'),
-        });
-
-        return ffmpeg;
-      })();
-
-      async function writeFrame() {
-        return new Promise((resolve, reject) => {
-          canvas instanceof HTMLCanvasElement ? canvas.toBlob(
-            async (blob) => {
-              if (!blob) {
-                reject(new Error("Unable to create Blob from canvas"));
-              }
-              const data = await fetchFile(blob);
-              await ffmpeg.writeFile(`${f}.png`, data);
-              resolve();
-            }, "png", frameOptions.quality) : (async () => {
-              const blob = await canvas.convertToBlob(frameOptions);
-              const data = await fetchFile(blob);
-              await ffmpeg.writeFile(`${f}.png`, data);
-              resolve();
-            })();
-        });
-      }
-
-      async function transcodeAndSave() {
-        // ffmpeg -framerate 30 -start_number 1 -i %1d.png -c:v libx264 -pix_fmt yuv420p out.mp4
-        await ffmpeg.exec([
-          "-framerate", `${fps}`,
-          "-start_number", "1",
-          "-i", "%d.png",
-          "-c:v", "libx264",
-          "-pix_fmt", "yuv420p",
-          fileName,
-        ]);
-        const data = await ffmpeg.readFile(fileName);
-        const url = URL.createObjectURL(new Blob([data.buffer], { type: `video/${fileType}` }));
-        saveAs(url, fileName);
-      }
-
-      if (blocking) {
-        for (; f <= count; f++) {
-          const dt = performance.now() - t;
-          t += dt;
-
-          tick(canvas, f, dt);
-          await writeFrame();
-        }
-        await transcodeAndSave();
-      } else {
-        (async function loop() {
-          const dt = performance.now() - t;
-          t += dt;
-
-          tick(canvas, f, dt);
-          await writeFrame();
-
-          if (f >= count) {
-            await transcodeAndSave();
-            return;
-          }
-          f++;
-
-          requestAnimationFrame(loop);
-        })();
-      }
-    }
-  </script>
+  <script src="capture.js" type="module"></script>
 </head>
 <body>
   <div id="container">

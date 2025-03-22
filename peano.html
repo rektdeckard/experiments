@@ -8,7 +8,10 @@
     :root {
       font-family: monospace;
     }
-    form { display: table; }
+    form {
+      display: table;
+      margin-top: 10px;
+    }
     .row {
       display: table-row;
       margin-bottom: 10px;
@@ -27,34 +30,62 @@
       width: 600px;
       height: 600px;
     }
+    table {
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    td {
+      padding: 5px;
+    }
+    .right {
+      text-align: right;
+    }
   </style>
 </head>
 <body>
   <div id="container">
     <svg id="twosvg" width="600" height="600"></svg>
   </div>
-  <form action="" id="controls">
-    <div class="row">
-      <label for="ruleset">Ruleset</label>
-      <select id="ruleset"></select>
-    </div>
-    <div class="row">
-      <label for="iterations">Iterations</label>
-      <input type="range" min="1" max="40" id="iterations">
-    </div>
-    <div class="row">
-      <label for="linewidth">Stroke Width</label>
-      <input type="range" min="1" max="20" id="linewidth">
-    </div>
-    <div class="row">
-      <label for="strokestyle">Stroke Color</label>
-      <input type="color" id="strokestyle">
-    </div>
-    <div class="row">
-      <label for="fillstyle">Fill Color</label>
-      <input type="color" id="fillstyle">
-    </div>
-  </form>
+  <table>
+    <tr>
+      <td class="right"><label for="ruleset">Ruleset</label></td>
+      <td><select id="ruleset"></select></td>
+    </tr>
+    <tr>
+      <td class="right">
+        <label for="iterations">Iterations</label>
+      </td>
+      <td><input type="range" min="1" max="40" id="iterations"></td>
+    </tr>
+    <tr>
+      <td class="right"><label for="linewidth">Stroke Width</label></td>
+      <td><input type="range" min="1" max="20" id="linewidth"></td>
+    </tr>
+    <tr>
+      <td class="right"><label for="strokestyle">Stroke Color</label></td>
+      <td><input type="color" id="strokestyle"></td>
+    </tr>
+    <tr>
+      <td class="right"><label for="fillstyle">Fill Color</label></td>
+      <td><input type="color" id="fillstyle"></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>
+        <button type="button" id="randomizebtn">Randomize</button>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2"></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>
+    <button id="copybtn" type="button">Copy SVG</button>
+    <button id="savebtn">Save SVG</button>
+      </td>
+    </tr>
+  </table>
   <script src="./peano.js" type="module"></script>
 </body>
 </html>

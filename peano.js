@@ -131,7 +131,7 @@ const RULESETS = {
     },
     angle: 90,
     heading: 0,
-    iterMax: 6,
+    iterMax: 5,
     scaleFactor: (i) => 3 ** i - 1,
   },
   "Sierpinski Triangle": {
@@ -200,7 +200,6 @@ class LSystem {
     this.x = (this.ruleset.pos?.x || 0) * this.two.width + this.lineWidth / 2;
     this.y = (this.ruleset.pos?.y || 0) * this.two.height + this.lineWidth / 2;
     this.angle = (this.ruleset.heading || 0) * (Math.PI / 180);
-    // TODO: reset two context position maybe?
   }
 
   rewrite(iter) {
@@ -324,9 +323,7 @@ class LSystem {
       iterations = parseInt(iterationsInput.value);
     }
 
-    // TODO: reset canvas
     lsystem.setRuleset(curve);
-    // lsystem.reset();
     lsystem.execute(iterations);
   });
 
@@ -335,8 +332,6 @@ class LSystem {
   iterationsInput.max = curve.iterMax || ITER_MAX;
   iterationsInput.addEventListener("input", () => {
     iterations = parseInt(iterationsInput.value);
-    // ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // TODO: two clear canvas
     lsystem.reset();
     lsystem.execute(iterations);
   });
@@ -345,8 +340,6 @@ class LSystem {
   lineWidthInput.value = lineWidth;
   lineWidthInput.addEventListener("input", () => {
     lineWidth = parseInt(lineWidthInput.value);
-    // ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // TODO: two clear canvas
     lsystem.setLineWidth(lineWidth);
     lsystem.reset();
     lsystem.execute(iterations);
@@ -356,8 +349,6 @@ class LSystem {
   strokeStyleInput.value = strokeStyle;
   strokeStyleInput.addEventListener("input", () => {
     strokeStyle = strokeStyleInput.value;
-    // ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // TODO: two clear canvas
     lsystem.setStrokeStyle(strokeStyle);
     lsystem.reset();
     lsystem.execute(iterations);
@@ -370,10 +361,72 @@ class LSystem {
   fillStyleInput.addEventListener("input", () => {
     fillStyle = fillStyleInput.value;
     container.style.backgroundColor = fillStyle;
-    // ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // TODO: two clear canvas
     lsystem.reset();
     lsystem.execute(iterations);
+  });
+
+  const randomButton = document.getElementById("randomizebtn");
+  randomButton.addEventListener("click", () => {
+    function byteStr() {
+      return Math.floor(Math.random() * 256)
+        .toString(16)
+        .padStart(2, "0");
+    }
+    const fill = `#${byteStr()}${byteStr()}${byteStr()}`;
+    fillStyleInput.value = fill;
+    fillStyle = fill;
+    const stroke = `#${byteStr()}${byteStr()}${byteStr()}`;
+    strokeStyleInput.value = stroke;
+    strokeStyle = stroke;
+
+    container.style.backgroundColor = fillStyle;
+    lsystem.setStrokeStyle(strokeStyle);
+    lsystem.reset();
+    lsystem.execute(iterations);
+  });
+
+  const copyButton = document.getElementById("copybtn");
+  copyButton.addEventListener("click", () => {
+    const svg = document.getElementById("twosvg");
+    navigator.clipboard.writeText(svg.outerHTML).then(() => {
+      console.log("Copied to clipboard:", svg.outerHTML);
+    });
+  });
+
+  const saveButton = document.getElementById("savebtn");
+  saveButton.addEventListener("click", () => {
+    const svg = document.getElementById("twosvg");
+    const filename = rulesetSelect.value + "-" + iterations + ".svg";
+    const blob = new Blob([svg.outerHTML], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+  });
+
+  function walkSVGPaths(svg) {
+    svg.querySelectorAll("path").forEach((path) => {
+      if (path.dataset.walked !== "true") {
+        const length = path.getTotalLength();
+        path.style.transition = `stroke-dashoffset ${Math.floor(length) / 10}ms ease-in-out`;
+        path.style.strokeDasharray = length;
+        path.style.strokeDashoffset = length;
+        path.dataset.walked = "true";
+      } else {
+        path.style.strokeDashoffset = 0;
+        path.dataset.walked = "false";
+      }
+    });
+  }
+
+  const svg = document.getElementById("twosvg");
+  svg.addEventListener("click", () => walkSVGPaths(svg));
+
+  window.addEventListener("keypress", (e) => {
+    if (e.key === "w") {
+      walkSVGPaths(svg);
+    }
   });
 
   lsystem.execute(iterations);

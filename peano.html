@@ -46,16 +46,31 @@
   <div id="container">
     <svg id="twosvg" width="600" height="600"></svg>
   </div>
+  <small>Press <kbd>w</kbd> to animate the curve in and out</small>
+  <hr />
   <table>
     <tr>
       <td class="right"><label for="ruleset">Ruleset</label></td>
       <td><select id="ruleset"></select></td>
+      <td class="right"><label for="easing">Animation Funtion</label></td>
+      <td>
+        <select id="easing">
+          <option value="linear">linear</option>
+          <option value="ease">ease</option>
+          <option value="ease-in">ease-in</option>
+          <option value="ease-out">ease-out</option>
+          <option value="ease-in-out">ease-in-out</option>
+          <option value="step-start">step</option>
+        </select>
+      </td>
     </tr>
     <tr>
       <td class="right">
         <label for="iterations">Iterations</label>
       </td>
       <td><input type="range" min="1" max="40" id="iterations"></td>
+      <td class="right"><label for="speed">Animation Speed</label></td>
+      <td><input type="range" min="1" max="100" id="speed"></td>
     </tr>
     <tr>
       <td class="right"><label for="linewidth">Stroke Width</label></td>
@@ -76,13 +91,10 @@
       </td>
     </tr>
     <tr>
-      <td colspan="2"></td>
-    </tr>
-    <tr>
       <td></td>
       <td>
-    <button id="copybtn" type="button">Copy SVG</button>
-    <button id="savebtn">Save SVG</button>
+        <button id="copybtn" type="button">Copy SVG</button>
+        <button id="savebtn">Save SVG</button>
       </td>
     </tr>
   </table>

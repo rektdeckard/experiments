@@ -294,9 +294,12 @@ class LSystem {
 (function main() {
   let iterations = 3;
   let lineWidth = 4;
-  let strokeStyle = "#DF80FF";
-  let fillStyle = "#161621";
+  let strokeStyle = "#000000";
+  let fillStyle = "#FFFFFF";
   let curve = RULESETS[START_RULESET];
+
+  let speed = 10;
+  let easing = "ease-in-out";
 
   const lsystem = new LSystem({
     two: new Two(TWO_PARAMS),
@@ -407,9 +410,10 @@ class LSystem {
 
   function walkSVGPaths(svg) {
     svg.querySelectorAll("path").forEach((path) => {
+      const length = path.getTotalLength();
+      path.style.transition = `stroke-dashoffset ${Math.floor(length) / speed}ms ${easing}`;
+
       if (path.dataset.walked !== "true") {
-        const length = path.getTotalLength();
-        path.style.transition = `stroke-dashoffset ${Math.floor(length) / 10}ms ease-in-out`;
         path.style.strokeDasharray = length;
         path.style.strokeDashoffset = length;
         path.dataset.walked = "true";
@@ -427,6 +431,18 @@ class LSystem {
     if (e.key === "w") {
       walkSVGPaths(svg);
     }
+  });
+
+  const easingSelect = document.getElementById("easing");
+  easingSelect.value = easing;
+  easingSelect.addEventListener("input", () => {
+    easing = easingSelect.value;
+  });
+
+  const speedInput = document.getElementById("speed");
+  speedInput.value = speed;
+  speedInput.addEventListener("input", () => {
+    speed = parseInt(speedInput.value);
   });
 
   lsystem.execute(iterations);

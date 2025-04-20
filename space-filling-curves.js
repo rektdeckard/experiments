@@ -308,7 +308,6 @@ class LSystem {
 
   let speed = 10;
   let easing = "ease-in-out";
-  let morph = true;
 
   const lsystem = new LSystem({
     two: new Two(TWO_PARAMS),

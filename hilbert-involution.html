@@ -67,7 +67,7 @@
       ></path>
       <path
         id="morph-t"
-        transform="matrix(1 0 0 1 0 0)"
+        transform="scale(2), translate(-149, -299)"
         d="M 1.5 1.5 L 1.5 596.5 L 596.5 596.5 L 596.5 1.5"
       ></path>
     </svg>
@@ -82,6 +82,22 @@
     <hr />
     <table>
       <tr>
+        <td class="right"><label for="duration">Duration</label></td>
+        <td><input id="duration" type="number" min="0" /></td>
+      </tr>
+      <tr>
+        <td class="right"><label for="delay">Delay</label></td>
+        <td><input id="delay" type="number" min="0" /></td>
+      </tr>
+      <tr>
+        <td class="right"><label for="easing">Easing</label></td>
+        <td><select id="easing"></select></td>
+      </tr>
+      <tr>
+        <td class="right"><label for="linewidth">Stroke Width</label></td>
+        <td><input type="range" min="1" max="8" id="linewidth" /></td>
+      </tr>
+      <tr>
         <td class="right"><label for="strokestyle">Stroke Color</label></td>
         <td><input type="color" id="strokestyle" /></td>
       </tr>
@@ -94,6 +110,10 @@
         <td>
           <button type="button" id="randomizebtn">Randomize</button>
         </td>
+      </tr>
+      <tr>
+        <td class=""right"><label for="crop">Crop</label></td>
+        <td><input type="checkbox" id="crop" checked /></td>
       </tr>
     </table>
     <script src="./hilbert-involution.js" type="module"></script>

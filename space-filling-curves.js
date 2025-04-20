@@ -405,6 +405,15 @@ class LSystem {
     lsystem.reset();
     lsystem.execute(iterations);
   });
+  window.addEventListener("keypress", (e) => {
+    if (e.key === "x") {
+      smoothing = !smoothing;
+      smoothingCheckbox.checked = smoothing;
+      lsystem.setCurved(smoothing);
+      lsystem.reset();
+      lsystem.execute(iterations);
+    }
+  });
 
   const copyButton = document.getElementById("copybtn");
   copyButton.addEventListener("click", () => {
@@ -446,7 +455,8 @@ class LSystem {
   svg.addEventListener("click", () => walkSVGPaths(svg));
 
   window.addEventListener("keypress", (e) => {
-    if (e.key === "w") {
+    if (e.key == " " || e.code == "Space") {
+      e.preventDefault();
       walkSVGPaths(svg);
     }
   });

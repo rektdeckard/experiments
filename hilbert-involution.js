@@ -50,7 +50,7 @@ const INVOLUTION_OPTS = {
             onComplete: () => {
               playing = false;
             },
-          }
+          },
         );
       } else {
         tween = KUTE.to(path, { path: `#morph-${i}` }, opts).chain(tween);
@@ -83,7 +83,8 @@ const INVOLUTION_OPTS = {
 
   svgEl.addEventListener("click", involute);
   window.addEventListener("keypress", (e) => {
-    if (e.key === "q") {
+    if (e.key == " " || e.code == "Space") {
+      e.preventDefault();
       involute();
     }
   });
@@ -119,12 +120,12 @@ const INVOLUTION_OPTS = {
   lineWidthInput.value = INITIAL_STROKE_WIDTH;
   document.documentElement.style.setProperty(
     "--stroke-width",
-    INITIAL_STROKE_WIDTH
+    INITIAL_STROKE_WIDTH,
   );
   lineWidthInput.addEventListener("input", () => {
     document.documentElement.style.setProperty(
       "--stroke-width",
-      lineWidthInput.valueAsNumber
+      lineWidthInput.valueAsNumber,
     );
   });
 
@@ -134,7 +135,7 @@ const INVOLUTION_OPTS = {
   strokeStyleInput.addEventListener("input", () => {
     document.documentElement.style.setProperty(
       "--stroke",
-      strokeStyleInput.value
+      strokeStyleInput.value,
     );
   });
 
@@ -149,8 +150,17 @@ const INVOLUTION_OPTS = {
   cropCheckbox.addEventListener("input", () => {
     pathEl.setAttribute(
       "transform",
-      cropCheckbox.checked ? "scale(2), translate(-149, -299)" : ""
+      cropCheckbox.checked ? "scale(2), translate(-149, -299)" : "",
     );
+  });
+  window.addEventListener("keypress", (e) => {
+    if (e.key == "x") {
+      cropCheckbox.checked = !cropCheckbox.checked;
+      pathEl.setAttribute(
+        "transform",
+        cropCheckbox.checked ? "scale(2), translate(-149, -299)" : "",
+      );
+    }
   });
 
   function randomizecolor() {

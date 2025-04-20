@@ -4,22 +4,33 @@
   --stroke-width: 3;
   --fill: #ffffff;
 }
+
 #container {
   padding: 10px;
   width: 600px;
   height: 600px;
   background-color: var(--fill);
 }
+
 label {
   padding-right: 10px;
 }
+
 table {
   border-collapse: collapse;
   margin-top: 10px;
 }
+
 td {
   padding: 5px;
 }
+
 .right {
   text-align: right;
+}
+
+kbd {
+  background-color: #f0f0f0;
+  border: 1px solid #000000;
+  padding: 1px 3px;
 }

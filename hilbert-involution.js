@@ -11,6 +11,7 @@ const INITIAL_DURATION = 1000;
 const INITIAL_DELAY = 0;
 const INITIAL_EASING_METHOD = "easingCircularInOut";
 const INVOLUTION_OPTS = {
+  morphPrecision: 10,
   duration: INITIAL_DURATION,
   delay: INITIAL_DELAY,
   easing: KUTE.Easing[INITIAL_EASING_METHOD],

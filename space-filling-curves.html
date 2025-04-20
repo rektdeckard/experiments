@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>space-filling curves</title>
+    <link rel="stylesheet" href="./base.css">
+    <style>
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <svg id="twosvg" width="600" height="600"></svg>
+    </div>
+    <ul>
+      <li>
+        <small>Press <kbd>w</kbd> to animate the curve in and out</small>
+      </li>
+      <li>
+        <small>Press <kbd>c</kbd> to randomize colors</small>
+      </li>
+    </ul>
+    <hr />
+    <table>
+      <tr>
+        <td class="right"><label for="ruleset">Ruleset</label></td>
+        <td><select id="ruleset"></select></td>
+        <td class="right"><label for="easing">Animation Funtion</label></td>
+        <td>
+          <select id="easing">
+            <option value="linear">linear</option>
+            <option value="ease">ease</option>
+            <option value="ease-in">ease-in</option>
+            <option value="ease-out">ease-out</option>
+            <option value="ease-in-out">ease-in-out</option>
+            <option value="step-start">step</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td class="right">
+          <label for="iterations">Iterations</label>
+        </td>
+        <td><input type="range" min="1" max="40" id="iterations" /></td>
+        <td class="right"><label for="speed">Animation Speed</label></td>
+        <td><input type="range" min="1" max="100" id="speed" /></td>
+      </tr>
+      <tr>
+        <td class="right"><label for="smoothing">Smoothing</label></td>
+        <td><input type="checkbox" id="smoothing" /></td>
+        <td class="right"><label for="morph">Morph</label></td>
+        <td><input type="checkbox" id="morph" /></td>
+      </tr>
+      <tr>
+        <td class="right"><label for="linewidth">Stroke Width</label></td>
+        <td><input type="range" min="1" max="20" id="linewidth" /></td>
+      </tr>
+      <tr>
+        <td class="right"><label for="strokestyle">Stroke Color</label></td>
+        <td><input type="color" id="strokestyle" /></td>
+      </tr>
+      <tr>
+        <td class="right"><label for="fillstyle">Fill Color</label></td>
+        <td><input type="color" id="fillstyle" /></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>
+          <button type="button" id="randomizebtn">Randomize</button>
+        </td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>
+          <button id="copybtn" type="button">Copy SVG</button>
+          <button id="savebtn">Save SVG</button>
+        </td>
+      </tr>
+    </table>
+    <script src="./space-filling-curves.js" type="module"></script>
+  </body>
+</html>

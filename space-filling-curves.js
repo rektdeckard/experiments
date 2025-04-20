@@ -17,6 +17,7 @@ const TWO_PARAMS = {
  * @property {Object.<string, string>} rules - The L-System rules
  * @property {{ draw?: string[], move?: string[] }} [defs] - The optional command definitions
  * @property {number} angle - The turning angle in degrees
+ * @property {boolean} [closed] - Whether the curve is closed or not
  * @property {number} [heading] - The initial heading in degrees
  * @property {number} iterMax - The maximum number of iterations
  * @property {{ x?: number, y?: number }} [pos] - The starting position
@@ -72,6 +73,7 @@ const RULESETS = {
     axiom: "F--XF--F--XF",
     rules: { X: "XF+F+XF--F--XF+F+X" },
     angle: 45,
+    closed: true,
     iterMax: 8,
     pos: {
       x: 0.49,
@@ -91,6 +93,7 @@ const RULESETS = {
     axiom: "F-F-F-F",
     rules: { F: "F+F-F-FF+F+F-F" },
     angle: 90,
+    closed: true,
     iterMax: 6,
     pos: { y: 1 / 2 },
     scaleFactor: (i) => 3 ** i,
@@ -119,7 +122,7 @@ const RULESETS = {
     axiom: "F",
     rules: { F: "F+F-F-F-F+F+F+F-F" },
     angle: 90,
-    iterMax: 6,
+    iterMax: 5,
     pos: { y: 1 / 2 },
     scaleFactor: (i) => 3 ** i,
   },
@@ -142,6 +145,7 @@ const RULESETS = {
     },
     defs: { draw: ["F", "G"] },
     angle: 120,
+    closed: true,
     heading: 0,
     iterMax: 8,
     pos: { y: 0.9 },
@@ -177,6 +181,7 @@ class LSystem {
     this.angle = (this.ruleset.heading || 0) * (Math.PI / 180);
     this.lineWidth = lineWidth;
     this.strokeStyle = strokeStyle;
+    this.curved = false;
     this.x = (this.ruleset.pos?.x || 0) * this.two.width + lineWidth / 2;
     this.y = (this.ruleset.pos?.y || 0) * this.two.height + lineWidth / 2;
   }
@@ -192,8 +197,8 @@ class LSystem {
     this.lineWidth = lineWidth;
   }
 
-  setStrokeStyle(strokeStyle) {
-    this.strokeStyle = strokeStyle;
+  setCurved(curved) {
+    this.curved = curved;
   }
 
   reset() {
@@ -252,11 +257,13 @@ class LSystem {
 
   renderPath(points) {
     const path = new Two.Path(points, false);
-    path.stroke = this.strokeStyle;
+    path.stroke = "var(--stroke)";
     path.fill = "transparent";
     path.linewidth = this.lineWidth;
     path.cap = "round";
     path.join = "round";
+    path.curved = this.curved;
+    path.closed = !!this.ruleset.closed;
     this.two.add(path);
   }
 
@@ -296,10 +303,12 @@ class LSystem {
   let lineWidth = 4;
   let strokeStyle = "#000000";
   let fillStyle = "#FFFFFF";
+  let smoothing = false;
   let curve = RULESETS[START_RULESET];
 
   let speed = 10;
   let easing = "ease-in-out";
+  let morph = true;
 
   const lsystem = new LSystem({
     two: new Two(TWO_PARAMS),
@@ -343,6 +352,7 @@ class LSystem {
   lineWidthInput.value = lineWidth;
   lineWidthInput.addEventListener("input", () => {
     lineWidth = parseInt(lineWidthInput.value);
+    document.documentElement.style.setProperty("--stroke-width", lineWidth);
     lsystem.setLineWidth(lineWidth);
     lsystem.reset();
     lsystem.execute(iterations);
@@ -350,26 +360,21 @@ class LSystem {
 
   let strokeStyleInput = document.getElementById("strokestyle");
   strokeStyleInput.value = strokeStyle;
+  document.documentElement.style.setProperty("--stroke", strokeStyle);
   strokeStyleInput.addEventListener("input", () => {
     strokeStyle = strokeStyleInput.value;
-    lsystem.setStrokeStyle(strokeStyle);
-    lsystem.reset();
-    lsystem.execute(iterations);
+    document.documentElement.style.setProperty("--stroke", strokeStyle);
   });
 
   let fillStyleInput = document.getElementById("fillstyle");
-  let container = document.getElementById("container");
-  container.style.backgroundColor = fillStyle;
+  document.documentElement.style.setProperty("--fill", fillStyle);
   fillStyleInput.value = fillStyle;
   fillStyleInput.addEventListener("input", () => {
     fillStyle = fillStyleInput.value;
-    container.style.backgroundColor = fillStyle;
-    lsystem.reset();
-    lsystem.execute(iterations);
+    document.documentElement.style.setProperty("--fill", fillStyle);
   });
 
-  const randomButton = document.getElementById("randomizebtn");
-  randomButton.addEventListener("click", () => {
+  function randomizecolor() {
     function byteStr() {
       return Math.floor(Math.random() * 256)
         .toString(16)
@@ -382,8 +387,22 @@ class LSystem {
     strokeStyleInput.value = stroke;
     strokeStyle = stroke;
 
-    container.style.backgroundColor = fillStyle;
-    lsystem.setStrokeStyle(strokeStyle);
+    document.documentElement.style.setProperty("--stroke", strokeStyle);
+    document.documentElement.style.setProperty("--fill", fillStyle);
+  }
+  const randomButton = document.getElementById("randomizebtn");
+  randomButton.addEventListener("click", randomizecolor);
+  window.addEventListener("keypress", (e) => {
+    if (e.key === "c") {
+      randomizecolor();
+    }
+  });
+
+  const smoothingCheckbox = document.getElementById("smoothing");
+  smoothingCheckbox.checked = smoothing;
+  smoothingCheckbox.addEventListener("input", () => {
+    smoothing = smoothingCheckbox.checked;
+    lsystem.setCurved(smoothing);
     lsystem.reset();
     lsystem.execute(iterations);
   });
